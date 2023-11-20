@@ -2,12 +2,15 @@ package springbook.user.test;
 
 import java.sql.SQLException;
 
+import springbook.user.dao.DaoFactory;
 import springbook.user.dao.UserDao;
 import springbook.user.domain.User;
 
 public class UserTest {
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {
-		UserDao dao = new UserDao();
+		UserDao dao = new DaoFactory().userDao();
+		
+		dao.deleteAll();
 		
 		User user = new User();
 		user.setId("john");

@@ -1,6 +1,5 @@
 package springbook.user.dao;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,10 +7,15 @@ import java.sql.SQLException;
 import springbook.user.domain.User;
 
 public class UserDao {
+	
+	private ConnectionMaker simpleConnectionMaker;
+	
+	public UserDao(ConnectionMaker connectionMaker) {
+		simpleConnectionMaker = connectionMaker;
+	}
+	
 	public void add(User user) throws ClassNotFoundException, SQLException {
-		Class.forName("com.mysql.jdbc.Driver");
-		Connection c = DriverManager.getConnection(
-				"jdbc:mysql://localhost:3306/tobi-spring", "tobi", "1234");
+		Connection c = simpleConnectionMaker.makeNewConnection();
 		PreparedStatement ps = c.prepareStatement(
 				"insert into users(id, name, password) values(?, ?, ?)");
 		ps.setString(1, user.getId());
@@ -25,9 +29,7 @@ public class UserDao {
 	}
 	
 	public User get(String id) throws ClassNotFoundException, SQLException {
-		Class.forName("com.mysql.jdbc.Driver");
-		Connection c = DriverManager.getConnection(
-				"jdbc:mysql://localhost:3306/tobi-spring", "tobi", "1234");
+		Connection c = simpleConnectionMaker.makeNewConnection();
 		PreparedStatement ps = c.prepareStatement(
 				"select * from users where id = ?");
 		ps.setString(1, id);
@@ -45,4 +47,14 @@ public class UserDao {
 		
 		return user;
 	}
+	
+	public void deleteAll() throws ClassNotFoundException, SQLException {
+		Connection c = simpleConnectionMaker.makeNewConnection();
+		PreparedStatement ps = c.prepareStatement(
+				"delete from users");
+		ps.executeUpdate();
+		
+		ps.close();
+		c.close();
+	}	
 }
