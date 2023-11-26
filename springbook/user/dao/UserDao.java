@@ -11,16 +11,25 @@ import springbook.user.domain.User;
 
 public class UserDao {
 	
+	private JdbcContext jdbcContext;
 	private DataSource dataSource;
 	
-	
 	public void setDataSource(DataSource dataSource) {
+		
+		
+		//한 오브젝트의 수정자 메소드에서 다른 오브젝트를 초기화하고 코드를 이용해 DI하는 것은 스프링에서도 종종 사용되는 기법이다.
+		jdbcContext = new JdbcContext();
+		jdbcContext.setDataSource(dataSource);
+		
 		this.dataSource = dataSource;
 	}
 	
+	
 	public void add(final User user) throws SQLException {
-
-		jdbcContextWithStatementStrategy(new StatementStrategy() {
+		
+		
+		//콜백 오브젝트(StatementStragy)를 구현한 내부 클래스가 클라이언트 메소드 내의 정보(user)를 직접 참조하는것도 템플릿/콜백의 고유한 특징
+		this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
 			public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
 				PreparedStatement ps = c.prepareStatement(
 						"insert into users(id, name, password) values(?, ?, ?)");
@@ -59,7 +68,7 @@ public class UserDao {
 	}
 	
 	public void deleteAll() throws SQLException {
-		jdbcContextWithStatementStrategy(new StatementStrategy() {
+		this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
 			public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
 				PreparedStatement ps = c.prepareStatement("delete from users");
 				return ps;
@@ -105,34 +114,5 @@ public class UserDao {
 			}
 			
 		}
-	}
-	
-	public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
-		Connection c = null;
-		PreparedStatement ps = null;
-		
-		try {
-			c = dataSource.getConnection();
-			ps = stmt.makePreparedStatement(c);
-			ps.executeUpdate();
-		}catch (SQLException e) {
-			throw e;
-		} finally {
-			if(ps != null) {
-				try {
-					ps.close();
-				}catch (SQLException e) {
-					
-				}
-			}
-			if (c != null) {
-				try {
-					c.close();
-				}catch (SQLException e) {
-					
-				}
-			}			 
-		}
-		
 	}
 }
