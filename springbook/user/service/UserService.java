@@ -7,7 +7,11 @@ import springbook.user.domain.Level;
 import springbook.user.domain.User;
 
 public class UserService {
+	
 	UserDao userDao;
+	
+	public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
+	public static final int MIN_RECCOMEND_FOR_GOLD = 30;
 	
 	public void setUserDao(UserDao userDao) {
 		this.userDao = userDao;
@@ -15,17 +19,26 @@ public class UserService {
 	
 	public void upgradeLevels() {
 		List<User> users = userDao.getAll();
-		for(User user : users) {
-			Boolean changed = null; //레벨의 변화가 있는지를 확인하는 플래그
-			if (user.getLevel() == Level.BASIC && user.getLogin() >= 50) {
-				user.setLevel(Level.SILVER);
-				changed = true;
-			}else if (user.getLevel() == Level.SILVER && user.getRecommend() >= 30) {
-				user.setLevel(Level.GOLD);
-				changed = true;
-			}else changed = false;
-			
-			if(changed) userDao.update(user);
+		//다른 오브젝트의 데이터를 가져와서 작업하는 대신 데이터를 갖고 있는 다른 오브젝트에게 작업을 해달라고 요청하는 객체지향프로그래밍의 원리
+		for(User user : users) { 
+			if (canUpgradeLevel(user)) {
+				upgradeLevel(user);
+			}
+		}
+	}
+
+	private void upgradeLevel(User user) {
+		user.upgradeLevel();
+		userDao.update(user);
+	}
+
+	private boolean canUpgradeLevel(User user) {
+		Level currentLevel = user.getLevel();
+		switch(currentLevel) {
+			case BASIC: return (user.getLogin() >= MIN_LOGCOUNT_FOR_SILVER);
+			case SILVER: return (user.getRecommend() >= MIN_RECCOMEND_FOR_GOLD);
+			case GOLD: return false;
+			default: throw new IllegalArgumentException("Unkown Level: " + currentLevel);
 		}
 	}
 
