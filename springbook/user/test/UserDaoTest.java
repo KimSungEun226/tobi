@@ -47,9 +47,9 @@ public class UserDaoTest {
 //				"jdbc:mysql://localhost:3306/tobi-spring", "tobi", "1234", true);
 //		dao.setDataSource(dataSource);
 		
-		this.user1 = new User("zz1", "±è´ö¹è", "duckbae11", Level.BASIC, 1, 0);
-		this.user2 = new User("zz2", "Ã¢±èÈ­", "kim123", Level.SILVER, 55, 10);
-		this.user3 = new User("zz3", "¼Û¾Æ´ã", "song344", Level.GOLD, 100, 40);
+		this.user1 = new User("zz1", "±è´ö¹è", "duckbae11", Level.BASIC, 1, 0, "asd@nav.com");
+		this.user2 = new User("zz2", "Ã¢±èÈ­", "kim123", Level.SILVER, 55, 10, "asd@nav.com");
+		this.user3 = new User("zz3", "¼Û¾Æ´ã", "song344", Level.GOLD, 100, 40, "asd@nav.com");
 	}
 	
 	@Test
@@ -128,6 +128,7 @@ public class UserDaoTest {
 		assertThat(user1.getLevel(), is(user2.getLevel()));
 		assertThat(user1.getLogin(), is(user2.getLogin()));
 		assertThat(user1.getRecommend(), is(user2.getRecommend()));
+		assertThat(user1.getEmail(), is(user2.getEmail()));
 	}
 	
 	@Test(expected = DuplicateKeyException.class)
@@ -165,6 +166,7 @@ public class UserDaoTest {
 		user1.setLevel(Level.GOLD);
 		user1.setLogin(1000);
 		user1.setRecommend(999);
+		user1.setEmail("asx@daum.cme");
 		dao.update(user1);
 		
 		User user1update = dao.get(user1.getId());

@@ -26,7 +26,8 @@ public class UserDaoJdbc implements UserDao{
 					rs.getString("password"), 
 					Level.valueOf(rs.getInt("level")),
 					rs.getInt("login"),
-					rs.getInt("recommend"));
+					rs.getInt("recommend"),
+					rs.getString("email"));
 		}
 	};
 		
@@ -40,8 +41,9 @@ public class UserDaoJdbc implements UserDao{
 	public void add(User user) {
 		
 		//콜백 오브젝트(StatementStragy)를 구현한 내부 클래스가 클라이언트 메소드 내의 정보(user)를 직접 참조하는것도 템플릿/콜백의 고유한 특징
-		this.jdbcTemplate.update("insert into users(id, name, password, level, login, recommend) values(?, ?, ?, ?, ?, ?)",
-				user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend());
+		this.jdbcTemplate.update("insert into users(id, name, password, level, login, recommend, email) values(?, ?, ?, ?, ?, ?, ?)",
+				user.getId(), user.getName(), user.getPassword(), 
+				user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail());
 	}
 	
 	public User get(String id) {
@@ -86,7 +88,7 @@ public class UserDaoJdbc implements UserDao{
 	public void update(User user) {
 		this.jdbcTemplate.update(
 			"update users set name = ?, password = ?, level = ?, login =?, " + 
-			"recommend = ? where id = ?", user.getName(), user.getPassword(),
-			user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getId());
+			"recommend = ?, email = ? where id = ?", user.getName(), user.getPassword(),
+			user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail(), user.getId());
 	}
 }

@@ -15,6 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailSender;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -22,13 +24,14 @@ import org.springframework.transaction.PlatformTransactionManager;
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
+import springbook.user.service.MockMailSender;
 import springbook.user.service.UserService;
 
 @RunWith(SpringJUnit4ClassRunner.class) //스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장기능 지정
 @ContextConfiguration(locations = "/test-applicationContext.xml") // 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
 // 테스트 메소드에서 애플리케이션 컨텍스트의 구성이나 상태를 변경한다는 것을 테스트 컴텍스트 프레임워크에 알려준다.
 // 이 어노테이션이 붙은 테스트 클래스에는 애플리케이션 컨텍스트 공유를 허용하지 않는다.
-// @DirtiesContext 
+@DirtiesContext 
 public class UserServiceTest {
 	
 	@Autowired
@@ -40,22 +43,28 @@ public class UserServiceTest {
 	@Autowired
 	PlatformTransactionManager transactionManager;
 	
+	@Autowired
+	MailSender mailSender;
+	
 	List<User> users;
 	
 	@Before
 	public void setUp() {
 		users = Arrays.asList(
-				new User("kkk1", "김쿵캉", "k1", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER-1, 0),
-				new User("aaa2", "이초난", "a2", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER, 0),
-				new User("qqq3", "박냐츠", "q3", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD-1),
-				new User("bbb4", "최제츠", "b4", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD),
-				new User("nnn5", "나룻터", "n5", Level.GOLD, 100, 100));
+				new User("kkk1", "김쿵캉", "k1", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER-1, 0, "zz@naber.com"),
+				new User("aaa2", "이초난", "a2", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER, 0, "zz@naber.com"),
+				new User("qqq3", "박냐츠", "q3", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD-1, "zz@naber.com"),
+				new User("bbb4", "최제츠", "b4", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD, "zz@naber.com"),
+				new User("nnn5", "나룻터", "n5", Level.GOLD, 100, 100, "zz@naber.com"));
 	}
 	
 	@Test
 	public void upgradeLevels() throws Exception{
 		userDao.deleteAll();
 		for(User user : users) userDao.add(user);
+		
+		MockMailSender mockMailSender = new MockMailSender();
+		userService.setMailSender(mockMailSender);
 		
 		userService.upgradeLevels();
 		
@@ -64,6 +73,11 @@ public class UserServiceTest {
 		checkLevelUpgraded(users.get(2), false);
 		checkLevelUpgraded(users.get(3), true);
 		checkLevelUpgraded(users.get(4), false);
+		
+		List<String> requests = mockMailSender.getRequests();
+		assertThat(requests.size(), is(2));
+		assertThat(users.get(1).getEmail(), is(requests.get(0)));
+		assertThat(users.get(1).getEmail(), is(requests.get(1)));
 	}
 	
 	@Test
@@ -89,6 +103,7 @@ public class UserServiceTest {
 		UserService testUserService = new TestUserService(users.get(3).getId());
 		testUserService.setUserDao(this.userDao);  //수동 DI
 		testUserService.setTransactionManager(transactionManager);
+		testUserService.setMailSender(mailSender);
 		userDao.deleteAll();
 		for(User user : users) userDao.add(user);
 		
