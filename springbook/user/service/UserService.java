@@ -1,12 +1,10 @@
 package springbook.user.service;
 
-import java.sql.Connection;
 import java.util.List;
 
-import javax.sql.DataSource;
-
-import org.springframework.jdbc.datasource.DataSourceUtils;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -15,7 +13,7 @@ import springbook.user.domain.User;
 public class UserService {
 	
 	UserDao userDao;
-	DataSource dataSource;
+	private PlatformTransactionManager transactionManager;
 	
 	public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
 	public static final int MIN_RECCOMEND_FOR_GOLD = 30;
@@ -24,14 +22,13 @@ public class UserService {
 		this.userDao = userDao;
 	}
 	
-	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
+	//프로퍼티 이름은 관례를 따라 transactionManager라고 만드는 것이 편리.
+	public void setTransactionManager(PlatformTransactionManager transactionManager) {
+		this.transactionManager = transactionManager;
 	}
 	
 	public void upgradeLevels() throws Exception{
-		TransactionSynchronizationManager.initSynchronization();
-		Connection c = DataSourceUtils.getConnection(dataSource);
-		c.setAutoCommit(false);
+		TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 		try {
 			List<User> users = userDao.getAll();
 			//다른 오브젝트의 데이터를 가져와서 작업하는 대신 데이터를 갖고 있는 다른 오브젝트에게 작업을 해달라고 요청하는 객체지향프로그래밍의 원리
@@ -40,15 +37,11 @@ public class UserService {
 					upgradeLevel(user);
 				}
 			}
-			c.commit();
+			transactionManager.commit(status);
 		} catch (Exception e) {
-			c.rollback();
+			transactionManager.rollback(status);
 			throw e;
-		} finally {
-			DataSourceUtils.releaseConnection(c, dataSource);
-			TransactionSynchronizationManager.unbindResource(this.dataSource);
-			TransactionSynchronizationManager.clearSynchronization();
-		}
+		} 
 	}
 
 	protected void upgradeLevel(User user) {
