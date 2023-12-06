@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import static springbook.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
 import static springbook.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.annotation.DirtiesContext;
@@ -35,15 +35,15 @@ import springbook.user.domain.Level;
 import springbook.user.domain.User;
 import springbook.user.service.MockMailSender;
 import springbook.user.service.TransactionHandler;
+import springbook.user.service.TxProxyFactoryBean;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceImpl;
-import springbook.user.service.UserServiceTx;
 
 @RunWith(SpringJUnit4ClassRunner.class) //스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장기능 지정
 @ContextConfiguration(locations = "/test-applicationContext.xml") // 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
 // 테스트 메소드에서 애플리케이션 컨텍스트의 구성이나 상태를 변경한다는 것을 테스트 컴텍스트 프레임워크에 알려준다.
 // 이 어노테이션이 붙은 테스트 클래스에는 애플리케이션 컨텍스트 공유를 허용하지 않는다.
-@DirtiesContext 
+// @DirtiesContext 
 public class UserServiceTest {
 	
 	@Autowired
@@ -60,6 +60,9 @@ public class UserServiceTest {
 	
 	@Autowired
 	MailSender mailSender;
+	
+	@Autowired
+	ApplicationContext context; // 팩토리 빈을 가져오려면 애플리케이션 컨텍스트가 필요하다.
 	
 	List<User> users;
 	
@@ -144,19 +147,16 @@ public class UserServiceTest {
 	}
 
 	@Test
+	@DirtiesContext //다이내믹 프록시 팩토리 빈을 직접 만들어 사용할 때는 없앴다가 다시 등장한 컨텍스트 무효화 애노테이션
 	public void upgradeAllOrNothing() throws Exception {
 		TestUserService testUserService = new TestUserService(users.get(3).getId());
 		testUserService.setUserDao(this.userDao);  //수동 DI
 		testUserService.setMailSender(mailSender);
 		
-		TransactionHandler txHandler = new TransactionHandler();
-		txHandler.setTransactionManager(transactionManager);
-		txHandler.setTarget(testUserService);
-		txHandler.setPattern("upgradeLevels");
-		
-		// userService 인터페이스 타입의 다이내믹 프록시 생성
-		UserService txUserService = (UserService)Proxy.newProxyInstance(getClass().getClassLoader(), 
-				new Class[] {UserService.class}, txHandler);
+		// 팩토리 빈 자체를 가져와야 하므로 빈 이름에 &를 반드시 넣어야한다.
+		TxProxyFactoryBean txProxyFactoryBean = context.getBean("&userService", TxProxyFactoryBean.class);
+		txProxyFactoryBean.setTarget(testUserService);
+		UserService txUserService = (UserService) txProxyFactoryBean.getObject();
 		
 		userDao.deleteAll();
 		for(User user : users) userDao.add(user);
