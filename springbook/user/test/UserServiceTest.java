@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import static springbook.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
 import static springbook.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +34,7 @@ import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 import springbook.user.service.MockMailSender;
+import springbook.user.service.TransactionHandler;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceImpl;
 import springbook.user.service.UserServiceTx;
@@ -146,9 +149,14 @@ public class UserServiceTest {
 		testUserService.setUserDao(this.userDao);  //수동 DI
 		testUserService.setMailSender(mailSender);
 		
-		UserServiceTx txUserService = new UserServiceTx();
-		txUserService.setTransactionManager(transactionManager);
-		txUserService.setUserService(testUserService);
+		TransactionHandler txHandler = new TransactionHandler();
+		txHandler.setTransactionManager(transactionManager);
+		txHandler.setTarget(testUserService);
+		txHandler.setPattern("upgradeLevels");
+		
+		// userService 인터페이스 타입의 다이내믹 프록시 생성
+		UserService txUserService = (UserService)Proxy.newProxyInstance(getClass().getClassLoader(), 
+				new Class[] {UserService.class}, txHandler);
 		
 		userDao.deleteAll();
 		for(User user : users) userDao.add(user);
