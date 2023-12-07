@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.mail.MailSender;
@@ -153,8 +154,8 @@ public class UserServiceTest {
 		testUserService.setUserDao(this.userDao);  //수동 DI
 		testUserService.setMailSender(mailSender);
 		
-		// 팩토리 빈 자체를 가져와야 하므로 빈 이름에 &를 반드시 넣어야한다.
-		TxProxyFactoryBean txProxyFactoryBean = context.getBean("&userService", TxProxyFactoryBean.class);
+		
+		ProxyFactoryBean txProxyFactoryBean = context.getBean("&userService", ProxyFactoryBean.class);
 		txProxyFactoryBean.setTarget(testUserService);
 		UserService txUserService = (UserService) txProxyFactoryBean.getObject();
 		
