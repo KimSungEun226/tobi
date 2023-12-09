@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import static springbook.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
 import static springbook.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,8 +34,6 @@ import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 import springbook.user.service.MockMailSender;
-import springbook.user.service.TransactionHandler;
-import springbook.user.service.TxProxyFactoryBean;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceImpl;
 
@@ -51,7 +48,7 @@ public class UserServiceTest {
 	UserService userService;
 	
 	@Autowired
-	UserServiceImpl userServiceImpl;
+	UserService testUserService;
 	
 	@Autowired
 	UserDao userDao;
@@ -150,24 +147,21 @@ public class UserServiceTest {
 	@Test
 	@DirtiesContext //다이내믹 프록시 팩토리 빈을 직접 만들어 사용할 때는 없앴다가 다시 등장한 컨텍스트 무효화 애노테이션
 	public void upgradeAllOrNothing() throws Exception {
-		TestUserService testUserService = new TestUserService(users.get(3).getId());
-		testUserService.setUserDao(this.userDao);  //수동 DI
-		testUserService.setMailSender(mailSender);
-		
-		
-		ProxyFactoryBean txProxyFactoryBean = context.getBean("&userService", ProxyFactoryBean.class);
-		txProxyFactoryBean.setTarget(testUserService);
-		UserService txUserService = (UserService) txProxyFactoryBean.getObject();
 		
 		userDao.deleteAll();
 		for(User user : users) userDao.add(user);
 		
 		try {
-			txUserService.upgradeLevels();
+			this.testUserService.upgradeLevels();
 			fail("TestUserServiceException expected");
 		}catch(TestUserServiceException e) {}
 		
 		checkLevelUpgraded(users.get(1), false);
+	}
+	
+	@Test
+	public void advisorAutoProxyCreator() {
+		assertThat(testUserService, is(java.lang.reflect.Proxy.class));
 	}
 	
 	private void checkLevelUpgraded(User user, boolean upgraded) {
@@ -181,10 +175,11 @@ public class UserServiceTest {
 		assertThat(updated.getLevel(), is(expectedLevel));
 	}
 	
-	static class TestUserService extends UserServiceImpl {
+	// 포인컷의 클래스 필터에 선정되도록 이름 변경
+	static class TestUserServiceImpl extends UserServiceImpl {
 		private String id;
 		
-		private TestUserService(String id) {
+		public void setId(String id) {
 			this.id = id;
 		}
 		
