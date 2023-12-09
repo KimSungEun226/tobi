@@ -20,7 +20,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.mail.MailSender;
@@ -176,7 +175,7 @@ public class UserServiceTest {
 	}
 	
 	// 포인컷의 클래스 필터에 선정되도록 이름 변경
-	static class TestUserServiceImpl extends UserServiceImpl {
+	static class TestUserService extends UserServiceImpl {
 		private String id;
 		
 		public void setId(String id) {
