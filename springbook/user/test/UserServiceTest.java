@@ -26,9 +26,13 @@ import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -160,6 +164,20 @@ public class UserServiceTest {
 	}
 	
 	@Test
+	public void addInUpgrade() throws Exception {
+		
+		userDao.deleteAll();
+		for(User user : users) userDao.add(user);
+		
+		try {
+			this.testUserService.add(null);
+			fail("TestUserServiceException expected");
+		}catch(TestUserServiceException e) {}
+		
+		checkLevelUpgraded(users.get(1), false);
+	}
+	
+	@Test
 	public void advisorAutoProxyCreator() {
 		assertThat(testUserService, is(java.lang.reflect.Proxy.class));
 	}
@@ -167,6 +185,40 @@ public class UserServiceTest {
 	@Test(expected=TransientDataAccessResourceException.class)
 	public void readOnlyTransactionAttribute() {
 		testUserService.getAll();
+	}
+	
+	@Test
+	public void transactionSync() {
+		
+		
+		// 트랜잭션을 롤백했을 때 돌아갈 초기상태를 만들기 위해
+		// 트랜잭션 시작 전에 초기화를 해둔다.
+		userDao.deleteAll();
+		assertThat(userDao.getCount(), is(0));
+		
+		DefaultTransactionDefinition txDefinition = new DefaultTransactionDefinition();
+		// txDefinition.setReadOnly(true);
+		
+		TransactionStatus txStatus = transactionManager.getTransaction(txDefinition);
+		
+		userService.add(users.get(0));
+		userService.add(users.get(1));
+		assertThat(userDao.getCount(), is(2));
+		
+		//강제로 롤백. 트랜잭션 시작 전 상태로 돌아가야한다.
+		transactionManager.rollback(txStatus);
+		
+		assertThat(userDao.getCount(), is(0));
+	}
+	
+	// 테스트용 트랜잭션 애노테이션은 테스트가 끝나면 자동으로 롤백된다.
+	@Test()
+	@Transactional()
+	@Rollback(false) //롤백 어노테이션을 통한 커밋/롤백 설정가능
+	public void transactionSyncByAnnotation() {
+		userService.deleteAll();
+		userService.add(users.get(0));
+		userService.add(users.get(1));
 	}
 	
 	private void checkLevelUpgraded(User user, boolean upgraded) {
@@ -186,6 +238,13 @@ public class UserServiceTest {
 		
 		public void setId(String id) {
 			this.id = id;
+		}
+		
+		@Override
+		public void add(User user) {
+			// not supported 메소드내에서 호출된 메소드는 트랜잭션 처리가 가능할까?
+			upgradeLevels();
+			System.out.println("aaaaaaaaaaaaaaaaaaa" + this);
 		}
 		
 		protected void upgradeLevel(User user) {
