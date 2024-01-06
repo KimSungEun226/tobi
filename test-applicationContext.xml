@@ -60,18 +60,13 @@
 		<property name="sqlService" ref="sqlService"/>
 	</bean>
 	
-	<bean id="sqlService" class="springbook.user.sqlservice.BaseSqlService">
-		<property name="sqlReader" ref="sqlReader"/>
-		<property name="sqlRegistry" ref="sqlRegistry"/>
+	<bean id="sqlService" class="springbook.user.sqlservice.OxmSqlService">
+		<property name="unmarshaller" ref="unmarshaller"/>
 	</bean>
 	
-	<bean id="sqlReader" class="springbook.user.sqlservice.JaxbXmlSqlReader">
-		<property name="sqlmapFile" value="sqlmap.xml"/>
-	</bean>
-	
-	<bean id="sqlRegistry" class="springbook.user.sqlservice.HashMapSqlRegistry">
-		<property name="sqlmapFile" value="sqlmap.xml"/>
-	</bean>
+	<bean id="unmarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+		<property name="contextPath" value="springbook.user.sqlservice.jaxb"/>
+	</bean> 
 	
 	<bean id="mailSender" class="springbook.user.service.DummyMailSender"/>
 	

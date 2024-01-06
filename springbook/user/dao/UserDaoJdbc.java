@@ -28,7 +28,6 @@ public class UserDaoJdbc implements UserDao{
 	};
 	
 	private SqlService sqlService;
-		
 	
 	public void setDataSource(DataSource dataSource) {
 		//한 오브젝트의 수정자 메소드에서 다른 오브젝트를 초기화하고 코드를 이용해 DI하는 것은 스프링에서도 종종 사용되는 기법이다.
