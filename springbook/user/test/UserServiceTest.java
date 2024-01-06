@@ -47,10 +47,8 @@ import springbook.user.service.UserServiceImpl;
 // 테스트 메소드에서 애플리케이션 컨텍스트의 구성이나 상태를 변경한다는 것을 테스트 컴텍스트 프레임워크에 알려준다.
 // 이 어노테이션이 붙은 테스트 클래스에는 애플리케이션 컨텍스트 공유를 허용하지 않는다.
 // @DirtiesContext 
-@Transactional
 // 롤백 여부에 대한 기본 설정과 트랜잭션 매니저 빈을 지정하는 데 사용할 수 있다.
 // 디폴트 트랜잭션 매니저 아이디는 관례를 따라서 transactionManager로 되어 있다.
-@TransactionConfiguration(defaultRollback = false)
 public class UserServiceTest {
 	
 	@Autowired
