@@ -32,8 +32,8 @@ public class OxmSqlService implements SqlService{
 		this.oxmSqlReader.setUnmarshaller(unmarshaller);
 	}
 	
-	public void setSqlmapFile(Resource sqlmap) {
-		this.oxmSqlReader.setSqlmapFile(sqlmap);
+	public void setSqlmap(Resource sqlmap) {
+		this.oxmSqlReader.setSqlmap(sqlmap);
 	}
 	
 	@PostConstruct
@@ -60,7 +60,7 @@ public class OxmSqlService implements SqlService{
 			this.unmarshaller = unmarshaller;
 		}
 		
-		public void setSqlmapFile(Resource sqlmap) {
+		public void setSqlmap(Resource sqlmap) {
 			this.sqlmap = sqlmap;
 		};
 		
