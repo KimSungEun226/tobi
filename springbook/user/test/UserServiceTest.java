@@ -21,12 +21,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -34,7 +35,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import springbook.TestApplicationContext;
+import springbook.AppContext;
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
@@ -43,7 +44,8 @@ import springbook.user.service.UserService;
 import springbook.user.service.UserServiceImpl;
 
 @RunWith(SpringJUnit4ClassRunner.class) //스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장기능 지정
-@ContextConfiguration(classes = TestApplicationContext.class) // 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
+@ContextConfiguration(classes = AppContext.class) // 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
+@ActiveProfiles("test")
 // 테스트 메소드에서 애플리케이션 컨텍스트의 구성이나 상태를 변경한다는 것을 테스트 컴텍스트 프레임워크에 알려준다.
 // 이 어노테이션이 붙은 테스트 클래스에는 애플리케이션 컨텍스트 공유를 허용하지 않는다.
 // @DirtiesContext 
@@ -69,6 +71,9 @@ public class UserServiceTest {
 	@Autowired
 	ApplicationContext context; // 팩토리 빈을 가져오려면 애플리케이션 컨텍스트가 필요하다.
 	
+	@Autowired
+	DefaultListableBeanFactory bf;
+	
 	List<User> users;
 	
 	@Before
@@ -79,6 +84,13 @@ public class UserServiceTest {
 				new User("qqq3", "박냐츠", "q3", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD-1, "zz@naber.com"),
 				new User("bbb4", "최제츠", "b4", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD, "zz@naber.com"),
 				new User("nnn5", "나룻터", "n5", Level.GOLD, 100, 100, "zz@naber.com"));
+	}
+	
+	@Test
+	public void beans() {
+		for(String n : bf.getBeanDefinitionNames()) {
+			System.out.println(n + " \t " + bf.getBean(n).getClass().getName());
+		}
 	}
 	
 	@Test
@@ -182,7 +194,6 @@ public class UserServiceTest {
 	
 	@Test
 	public void advisorAutoProxyCreator() {
-		System.out.println("aaaaasdsad" +  testUserService.getClass());
 		assertThat(testUserService, is(java.lang.reflect.Proxy.class));
 	}
 	
@@ -248,7 +259,6 @@ public class UserServiceTest {
 		public void add(User user) {
 			// not supported 메소드내에서 호출된 메소드는 트랜잭션 처리가 가능할까?
 			upgradeLevels();
-			System.out.println("aaaaaaaaaaaaaaaaaaa" + this);
 		}
 		
 		protected void upgradeLevel(User user) {

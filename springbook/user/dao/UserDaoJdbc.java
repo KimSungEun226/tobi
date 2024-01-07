@@ -5,13 +5,16 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 import springbook.user.sqlservice.SqlService;
 
+@Repository
 public class UserDaoJdbc implements UserDao{
 	
 	private JdbcTemplate jdbcTemplate;
@@ -27,16 +30,18 @@ public class UserDaoJdbc implements UserDao{
 		}
 	};
 	
+	@Autowired
 	private SqlService sqlService;
 	
+	@Autowired
 	public void setDataSource(DataSource dataSource) {
 		//한 오브젝트의 수정자 메소드에서 다른 오브젝트를 초기화하고 코드를 이용해 DI하는 것은 스프링에서도 종종 사용되는 기법이다.
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
 	
-	public void setSqlService(SqlService sqlService) {
-		this.sqlService = sqlService;
-	}
+//	public void setSqlService(SqlService sqlService) {
+//		this.sqlService = sqlService;
+//	}
 	
 	public void add(User user) {
 		

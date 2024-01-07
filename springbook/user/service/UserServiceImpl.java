@@ -2,16 +2,22 @@ package springbook.user.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.stereotype.Service;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 
+@Service("userService")
 public class UserServiceImpl implements UserService{
 	
+	@Autowired
 	private UserDao userDao;
+	
+	@Autowired
 	private MailSender mailSender;
 	
 	public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
