@@ -12,76 +12,9 @@
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd 
 		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd 
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
-						
-								
-	<bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
-		<property name="driverClass" value="com.mysql.jdbc.Driver" />
-		<property name="url" value="jdbc:mysql://localhost:3306/tobi-spring" />
-		<property name="username" value="tobi" />
-		<property name="password" value="1234" />
-	</bean>
-	
-	<bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
-	
-	<bean id="userService" class="springbook.user.service.UserServiceImpl">
-		<property name="userDao" ref="userDao"/>
-		<property name="mailSender" ref="mailSender"/>
-	</bean>	
-	
-	
-	
-<!-- 	<bean id="transactionAdvice" class="springbook.user.service.TransactionAdvice">
-		<property name="transactionManager" ref="transactionManager"/>
-	</bean> -->
-	<tx:annotation-driven/>
-<!-- 	<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
-		<tx:attributes>
-			<tx:method name="get*" read-only="true"/>
-			<tx:method name="*" propagation="REQUIRED"/>
-		</tx:attributes>
-	</tx:advice>
-	
-	<aop:config> -->
-		<!-- <aop:pointcut id="transactionPointcut" 
-			expression="execution(* *..*ServiceImpl.upgrade*(..))"/>
-		
-		<aop:advisor advice-ref="transactionAdvice" pointcut-ref="transactionPointcut"/> -->
-		
-<!-- 		<aop:advisor advice-ref="transactionAdvice"
-			pointcut="bean(*Service)"/>
-	</aop:config> -->
-	<context:annotation-config/>
-	
-	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-		<property name="dataSource" ref="dataSource"/>
-	</bean>
-
-	<bean id="userDao" class="springbook.user.dao.UserDaoJdbc">
-		<property name="dataSource" ref="dataSource" />
-		<property name="sqlService" ref="sqlService"/>
-	</bean>
-	
-	<bean id="sqlService" class="springbook.user.sqlservice.OxmSqlService">
-		<property name="unmarshaller" ref="unmarshaller"/>
-		<property name="sqlRegistry" ref="sqlRegistry"/>
-	</bean>
-	
-	<bean id="sqlRegistry" class="springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry">
-		<property name="dataSource" ref="embeddedDatabase"/>
-	</bean>
-	
-	
-	<bean id="unmarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
-		<property name="contextPath" value="springbook.user.sqlservice.jaxb"/>
-	</bean> 
-	
-	<bean id="mailSender" class="springbook.user.service.DummyMailSender"/>
-	
-	<bean id="testUserService" class="springbook.user.test.UserServiceTest$TestUserService" parent="userService">
-		<property name="id" value="bbb4"/>
-	</bean>
 	
 	<jdbc:embedded-database id="embeddedDatabase" type="HSQL">
 		<jdbc:script location="classpath:springbook/user/sqlservice/updatable/sqlRegistrySchema.sql"/>
 	</jdbc:embedded-database>
+
 </beans>

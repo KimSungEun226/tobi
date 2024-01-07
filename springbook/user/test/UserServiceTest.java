@@ -29,12 +29,12 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import springbook.TestApplicationContext;
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
@@ -43,7 +43,7 @@ import springbook.user.service.UserService;
 import springbook.user.service.UserServiceImpl;
 
 @RunWith(SpringJUnit4ClassRunner.class) //스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장기능 지정
-@ContextConfiguration(locations = "/test-applicationContext.xml") // 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
+@ContextConfiguration(classes = TestApplicationContext.class) // 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
 // 테스트 메소드에서 애플리케이션 컨텍스트의 구성이나 상태를 변경한다는 것을 테스트 컴텍스트 프레임워크에 알려준다.
 // 이 어노테이션이 붙은 테스트 클래스에는 애플리케이션 컨텍스트 공유를 허용하지 않는다.
 // @DirtiesContext 
@@ -152,7 +152,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	@DirtiesContext //다이내믹 프록시 팩토리 빈을 직접 만들어 사용할 때는 없앴다가 다시 등장한 컨텍스트 무효화 애노테이션
+//	@DirtiesContext //다이내믹 프록시 팩토리 빈을 직접 만들어 사용할 때는 없앴다가 다시 등장한 컨텍스트 무효화 애노테이션
 	public void upgradeAllOrNothing() throws Exception {
 		
 		userDao.deleteAll();
@@ -182,6 +182,7 @@ public class UserServiceTest {
 	
 	@Test
 	public void advisorAutoProxyCreator() {
+		System.out.println("aaaaasdsad" +  testUserService.getClass());
 		assertThat(testUserService, is(java.lang.reflect.Proxy.class));
 	}
 	
@@ -236,7 +237,7 @@ public class UserServiceTest {
 	}
 	
 	// 포인컷의 클래스 필터에 선정되도록 이름 변경
-	static class TestUserService extends UserServiceImpl {
+	public static class TestUserService extends UserServiceImpl {
 		private String id;
 		
 		public void setId(String id) {
